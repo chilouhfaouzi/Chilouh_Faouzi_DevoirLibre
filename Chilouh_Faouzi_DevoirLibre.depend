@@ -1,0 +1,8 @@
+# depslib dependency file v1.0
+1593801721 source:c:\users\fawzi\documents\codeblocks\c++\stl\chilouh_faouzi_devoirlibre\main.cpp
+	<iostream>
+	<array>
+	<vector>
+	<string>
+	<algorithm>
+

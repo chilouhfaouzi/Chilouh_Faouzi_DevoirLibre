@@ -1,0 +1,311 @@
+#include <iostream>
+#include <array>
+#include <vector>
+#include <string>
+#include<algorithm>
+#include<regex>
+
+using namespace std;
+
+enum couleur { vide = 0,rouge, jaune };
+typedef vector <vector < couleur>>  Grille;
+class jeu
+{
+public:
+    jeu(size_t taille = 8);
+    bool jouer (size_t, couleur);
+    couleur gagnant() const ;
+    bool fini(couleur&) const;
+    void affiche();
+
+    size_t get_taille() const
+    {
+        return grille.size();
+    }
+protected :
+    vector <vector < couleur>>  grille;
+
+};
+jeu::jeu(unsigned int taille):grille (taille, vector<couleur>(taille,vide))
+{}//Grille est semble a une matrice[taille][taille] de type couleur
+//Start Jeu::jouer
+bool jeu::jouer(unsigned int nc,couleur col)
+{
+    // Si le numero de colonne n'est pas valide, le coup n'est pas valide :
+    if (nc >= get_taille())
+    {
+        return false;
+    }
+
+    // Si la colonne est pleine, le coup n'est pas valide :
+    if (grille[0][nc] != vide)
+    {
+        return false;
+    }
+
+    // On parcourt la colonne en partant du bas jusqu'a trouver une case vide */
+    size_t ligne(get_taille() - 1);
+    while (grille[ligne][nc] != vide)
+    {
+        --ligne;
+    }
+
+    // On remplit la case vide trouvee
+    grille[ligne][nc] = col;
+    return true;
+}
+//End jeu::jouer
+
+couleur jeu :: gagnant() const
+{
+    //Start test ligne
+    for(int i = 0 ; i < get_taille(); i++ )
+    {
+        for(int j=0 ; j< get_taille()-3; j++)
+        {
+            couleur ver = grille[i][j];
+            if(ver!=vide)  //si la case n'est pas vide verifie est-ce que il ya gangnant
+            {
+                if(ver == grille[i][j+ 1] && ver == grille[i][j + 2 ] && ver ==grille[i][j+3])  //Verification ligne
+                {
+                    return ver ;
+                }
+
+            }
+
+        }
+    }
+    //start test Colonne
+    for(int i = 0 ; i < get_taille()-3; i++ )
+    {
+        for(int j=0 ; j< get_taille(); j++)
+        {
+            couleur ver = grille[i][j];
+            if(ver!=vide)
+            {
+                if(ver == grille[i+1][j] && ver == grille[i+2][j] && ver ==grille[i+3][j])  //Verification colonne
+                {
+                    return ver ;
+                }
+
+            }
+
+        }
+    }
+    //Start test diagonal
+    for(int i = 0 ; i <get_taille()-3; i++ )
+    {
+        for(int j=3 ; j<get_taille(); j++)
+        {
+            couleur ver = grille[i][j];
+            if(ver!=vide)
+            {
+                //verification diagonal vers droite
+                if(ver == grille[i+1][j-1] && ver == grille[i+2][j-2] && ver ==grille[i+3][j-3])
+                {
+                    return ver ;
+                }
+                //verification diagonal vers gauche
+                if(ver == grille[i-1][j+1] && ver == grille[i-2][j+2] && ver ==grille[i-3][j+3])  //Verification ligne
+                {
+                    return ver ;
+                }
+            }
+        }
+    }
+
+}
+void jeu:: affiche()
+{
+    cout << endl;
+    for(int i =0 ; i <get_taille() ; i++ )
+    {
+        cout << " |";
+        for(auto kase : grille[i])
+        {
+            if (kase == vide)
+            {
+                cout << ' ';
+            }
+            else if (kase == rouge)
+            {
+                cout << 'O';
+            }
+            else
+            {
+                cout << 'X';
+            }
+            cout << '|';
+        }
+        cout << endl;
+    }
+
+    cout << '_';
+    for(size_t i(0); i <= get_taille() -1 ; ++i)
+    {
+        cout << '_' << i;
+    }
+    cout << "_";
+
+    cout << endl << endl;
+}
+class joueur
+{
+public:
+    joueur(couleur c, string n )
+    {
+        col=c;
+        nom=n;
+    }
+    ~joueur();
+    virtual jouer (jeu&) = 0 ;
+    couleur getCol()
+    {
+        return col;
+    }
+    string getNom()
+    {
+        return nom;
+    }
+
+protected:
+    couleur col;
+    string nom;
+
+};
+class humain: public joueur
+{
+public:
+    humain(couleur c=rouge,string name= "player") : joueur(c,name) {}
+
+    jouer(jeu& j);
+};
+
+humain::jouer(jeu& j)
+{
+    string c = " ";
+    int n=-1;
+    char cc= ' ';
+    //  affiche_jeu(jeu &);
+    do
+    {
+        //bach l user idkhal l int w saf
+        regex regex_int("[0-9]");
+        do
+        {
+            cout << "Input a positive number: ";
+            cin >> c;
+        }
+        while(!regex_match(c,regex_int));
+       /* cout<<"Entez le numéro de colonne à jouer : ";
+        cin >> n;*/
+      cout << c;
+      cc=c[0];
+      n = (int ) cc;
+    }
+    while(!j.jouer(n,col));   //si la position n'est valide il faut redemander d rentre le numero de colonne
+}
+
+
+class ordi: public joueur
+{
+public:
+    ordi(couleur c=jaune,string name= "ordinateur") : joueur(c,name) {}
+    jouer(jeu& j);
+};
+ordi::jouer(jeu& j)
+{
+    int r=-1;
+    do
+    {
+        r=rand() % 8;
+    }
+    while(! j.jouer(r,col));
+}
+
+/*Start class partie */
+class partie
+{
+public:
+
+    partie(joueur *j1,joueur *j2)
+    {
+        players[0]=j1;
+        players[1]=j2;
+    }
+    void lancer();
+    void vider();
+protected:
+    joueur  *players[2];
+    jeu j;
+};
+void partie::lancer()
+{
+    unsigned int tr=0;
+    while(tr < (j.get_taille() * j.get_taille() ) && j.gagnant() == vide  )
+    {
+        if(tr%2==0)
+        {
+            players[1]->jouer(j);
+        }
+        else
+        {
+            players[0]->jouer(j);
+        }
+        tr++;
+        j.affiche();
+    }
+    ;
+    if(j.gagnant()!=vide)
+    {
+        if(j.gagnant() == players[0]->getCol() )
+            cout<< "Le gangant est : "<<players[0]->getNom()<<endl;
+        else
+            cout<< "Le gangant est : "<<players[1]->getNom()<<endl;
+    }
+    else
+    {
+        cout<<"La partie terminee sans gagnant !!"<<endl;
+    }
+
+}
+void partie::vider()
+{
+    delete [] players;
+}
+/*End class partie */
+int main()
+{
+    int choix;
+    string nomj1,nomj2;
+    do
+    {
+        cout <<"Bienvenue ! \nChoisi le mode de jeu  : " <<endl;
+        cout<<"\t1: Avec Ordinateur \n\t2: 2 Joueurs "<<endl;
+        cin>>choix;
+    }
+    while(choix!=1 && choix !=2);
+    if(choix == 1)
+    {
+        partie p ( new ordi(rouge), new humain(jaune) );
+        p.lancer();
+        p.vider();
+    }
+    else
+    {
+        cout<<"Nom Joueur 1 : ";
+        cin>>nomj1;
+        cout << endl;
+        cout<<"Nom Joueur 2 : ";
+        cin>>nomj2;
+        cout <<endl;
+
+        partie p ( new humain(rouge,nomj2), new humain(jaune,nomj1) ); /*J'ai commencer par le nomj2 pour que le jouer 1 commencer
+                                                        parce-que la methode lancer que programmer que le jouer commence avant l'ordi  */
+        p.lancer();
+        p.vider();
+    }
+
+
+    return 0;
+}
